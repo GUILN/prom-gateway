@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.21.9
-// source: grpc/metrics.proto
+// source: proto/metrics.proto
 
-package protocol
+package proto
 
 import (
 	context "context"
@@ -22,7 +22,7 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type MetricsClient interface {
-	CreateCounter(ctx context.Context, in *CreateCounterRequest, opts ...grpc.CallOption) (*CreateCounterResponse, error)
+	IncrementCounter(ctx context.Context, in *IncrementCounterRequest, opts ...grpc.CallOption) (*IncrementCounterResponse, error)
 }
 
 type metricsClient struct {
@@ -33,9 +33,9 @@ func NewMetricsClient(cc grpc.ClientConnInterface) MetricsClient {
 	return &metricsClient{cc}
 }
 
-func (c *metricsClient) CreateCounter(ctx context.Context, in *CreateCounterRequest, opts ...grpc.CallOption) (*CreateCounterResponse, error) {
-	out := new(CreateCounterResponse)
-	err := c.cc.Invoke(ctx, "/Metrics/CreateCounter", in, out, opts...)
+func (c *metricsClient) IncrementCounter(ctx context.Context, in *IncrementCounterRequest, opts ...grpc.CallOption) (*IncrementCounterResponse, error) {
+	out := new(IncrementCounterResponse)
+	err := c.cc.Invoke(ctx, "/Metrics/IncrementCounter", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (c *metricsClient) CreateCounter(ctx context.Context, in *CreateCounterRequ
 // All implementations must embed UnimplementedMetricsServer
 // for forward compatibility
 type MetricsServer interface {
-	CreateCounter(context.Context, *CreateCounterRequest) (*CreateCounterResponse, error)
+	IncrementCounter(context.Context, *IncrementCounterRequest) (*IncrementCounterResponse, error)
 	mustEmbedUnimplementedMetricsServer()
 }
 
@@ -54,8 +54,8 @@ type MetricsServer interface {
 type UnimplementedMetricsServer struct {
 }
 
-func (UnimplementedMetricsServer) CreateCounter(context.Context, *CreateCounterRequest) (*CreateCounterResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateCounter not implemented")
+func (UnimplementedMetricsServer) IncrementCounter(context.Context, *IncrementCounterRequest) (*IncrementCounterResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method IncrementCounter not implemented")
 }
 func (UnimplementedMetricsServer) mustEmbedUnimplementedMetricsServer() {}
 
@@ -70,20 +70,20 @@ func RegisterMetricsServer(s grpc.ServiceRegistrar, srv MetricsServer) {
 	s.RegisterService(&Metrics_ServiceDesc, srv)
 }
 
-func _Metrics_CreateCounter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CreateCounterRequest)
+func _Metrics_IncrementCounter_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IncrementCounterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(MetricsServer).CreateCounter(ctx, in)
+		return srv.(MetricsServer).IncrementCounter(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Metrics/CreateCounter",
+		FullMethod: "/Metrics/IncrementCounter",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(MetricsServer).CreateCounter(ctx, req.(*CreateCounterRequest))
+		return srv.(MetricsServer).IncrementCounter(ctx, req.(*IncrementCounterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -96,10 +96,10 @@ var Metrics_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*MetricsServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "CreateCounter",
-			Handler:    _Metrics_CreateCounter_Handler,
+			MethodName: "IncrementCounter",
+			Handler:    _Metrics_IncrementCounter_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "grpc/metrics.proto",
+	Metadata: "proto/metrics.proto",
 }

@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  prometheus: 
+    image: 'prom/prometheus'
+    command: ["--config.file=/prometheus-config/prometheus.yml"]
+    volumes:
+      - ./prometheus-config:/prometheus-config
+    ports:
+      - "9090:9090"

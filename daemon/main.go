@@ -18,7 +18,11 @@ func main() {
 
 	// Config metrics exporter application
 	lggr := log.New(os.Stdout, "[METRICS EXPORTER]: ", 0)
-	metricsExporterApplication := app.New(lggr)
+	config := &app.MetricsExporterAppConfig{
+		IncommingMetricsHandlerGrpcAddress: "0.0.0.0:50051",
+		PrometheusMetricsEndpointAddress:   "0.0.0.0:8080",
+	}
+	metricsExporterApplication := app.New(lggr, config)
 
 	// Handle signals
 	signalChan := make(chan os.Signal, 1)
@@ -68,5 +72,6 @@ func main() {
 
 	if err := metricsExporterApplication.Run(ctx); err != nil {
 		shutDown("Error while running metrics exporter application")
+		return
 	}
 }
