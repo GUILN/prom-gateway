@@ -6,17 +6,27 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/guiln/prom-gateway/app"
 )
 
 func main() {
+
+	// Config contexts
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 
+	// Config metrics exporter application
+	lggr := log.New(os.Stdout, "[METRICS EXPORTER]: ", 0)
+	metricsExporterApplication := app.New(lggr)
+
+	// Handle signals
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, syscall.SIGHUP)
 
+	// Common shutdown function
 	shutDown := func(message string) {
-		log.Printf(message)
+		lggr.Printf(message)
 		cancel()
 		os.Exit(1)
 		return
@@ -32,11 +42,15 @@ func main() {
 					shutDown("Received term/int signal. Shutting down...")
 					return
 				case os.Interrupt:
-					shutDown("Gor interrupeted. Shutting down...")
+					shutDown("Got interrupeted. Shutting down...")
 					return
 				case syscall.SIGHUP:
-					// TODO: reload application
-					log.Printf("Reloading...")
+					lggr.Printf("Reloading...")
+					if err := metricsExporterApplication.Reload(); err != nil {
+						shutDown("Failed to reload application.")
+						return
+					}
+					lggr.Printf("Applicattion successful reloaded.")
 				}
 			case <-ctx.Done():
 				shutDown("Done...")
@@ -51,4 +65,8 @@ func main() {
 		close(signalChan)
 		cancel()
 	}()
+
+	if err := metricsExporterApplication.Run(ctx); err != nil {
+		shutDown("Error while running metrics exporter application")
+	}
 }
