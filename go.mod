@@ -1,3 +1,3 @@
-module github.com/guiln/prom-exporter
+module github.com/guiln/prom-gateway
 
 go 1.19
