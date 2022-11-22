@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/signal"
@@ -81,13 +83,15 @@ func main() {
 }
 
 type daemonConfig struct {
-	MetricsHandlerPort       int
-	MetricsHandlerAddress    string
-	PrometheusMetricsPort    int
-	PrometheusMetricsAddress string
+	MetricsHandlerPort       int    `json:"metrics_handler_port"`
+	MetricsHandlerAddress    string `json:"metrics_handler_address"`
+	PrometheusMetricsPort    int    `json:"prometheus_metrics_port"`
+	PrometheusMetricsAddress string `json:"prometheus_metrics_address"`
 }
 
 func getDaemonConfig() (*daemonConfig, error) {
+
+	configFile := flag.String("config-file", "", "configuration file. Inline configuration has precedence over file configuration")
 
 	metricsHandlerAddress := flag.String("metrics-handler-address", "", "metrics handler address exposed by gRPC")
 	prometheusMetricsAddress := flag.String("prometheus-metrics-address", "", "address to be accessed by prometheus scraper")
@@ -97,10 +101,30 @@ func getDaemonConfig() (*daemonConfig, error) {
 
 	flag.Parse()
 
+	if *metricsHandlerAddress == "" || *metricsHandlerPort == 0 || *prometheusMetricsAddress == "" || *prometheusMetricsPort == 0 {
+		if *configFile == "" {
+			return nil,
+				fmt.Errorf("Insuficient parameters was provided.")
+		}
+		return loadConfigFromFile(*configFile)
+	}
 	return &daemonConfig{
 		MetricsHandlerPort:       *metricsHandlerPort,
 		MetricsHandlerAddress:    *metricsHandlerAddress,
 		PrometheusMetricsPort:    *prometheusMetricsPort,
 		PrometheusMetricsAddress: *prometheusMetricsAddress,
 	}, nil
+}
+
+func loadConfigFromFile(configFile string) (*daemonConfig, error) {
+	content, err := ioutil.ReadFile(configFile)
+	if err != nil {
+		return nil, err
+	}
+	var payload daemonConfig
+	err = json.Unmarshal(content, &payload)
+	if err != nil {
+		return nil, err
+	}
+	return &payload, nil
 }

@@ -9,22 +9,23 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
-type MetricsServer struct {
+type metricsServer struct {
 	proto.UnimplementedMetricsServer
 	lggr     *log.Logger
 	counters map[string]prometheus.Counter
 }
 
-func New(lggr *log.Logger) *MetricsServer {
-	return &MetricsServer{
+func new(lggr *log.Logger) *metricsServer {
+	return &metricsServer{
 		lggr:     lggr,
 		counters: make(map[string]prometheus.Counter),
 	}
 }
 
-func (ms *MetricsServer) IncrementCounter(ctx context.Context, req *proto.IncrementCounterRequest) (*proto.IncrementCounterResponse, error) {
+func (ms *metricsServer) IncrementCounter(ctx context.Context, req *proto.IncrementCounterRequest) (*proto.IncrementCounterResponse, error) {
 	_, exists := ms.counters[req.CounterName]
 	if !exists {
 		ms.counters[req.CounterName] = promauto.NewCounter(prometheus.CounterOpts{
@@ -41,9 +42,15 @@ func (ms *MetricsServer) IncrementCounter(ctx context.Context, req *proto.Increm
 }
 
 func RunGrpcServer(ctx context.Context, tcpAddress string, lggr *log.Logger) error {
-	metricsServer := New(lggr)
+	metricsServer := new(lggr)
 	grpcServer := grpc.NewServer()
+
+	// Regiter service
 	proto.RegisterMetricsServer(grpcServer, metricsServer)
+
+	// Register the reflection service that allows client to determine the
+	// methods for this gRPC service
+	reflection.Register(grpcServer)
 
 	listener, err := net.Listen("tcp", tcpAddress)
 	if err != nil {

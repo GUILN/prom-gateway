@@ -61,6 +61,7 @@ func (app *MetricsExporterApp) Run(ctx context.Context) error {
 		select {
 		case err := <-errChannel:
 			app.lggr.Fatalf("Error in child applications...")
+			app.lggr.Fatal(err)
 			cancelChild()
 			return err
 		case <-ctx.Done():
