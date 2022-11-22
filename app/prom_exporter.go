@@ -2,16 +2,19 @@ package app
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/guiln/prom-gateway/metrics_server"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/sync/errgroup"
 )
 
 type MetricsExporterApp struct {
-	lggr   *log.Logger
-	config *MetricsExporterAppConfig
+	lggr           *log.Logger
+	config         *MetricsExporterAppConfig
+	cancelMainLoop context.CancelFunc
 }
 
 type MetricsExporterAppConfig struct {
@@ -36,49 +39,62 @@ func New(lggr *log.Logger, config *MetricsExporterAppConfig) *MetricsExporterApp
 // Main loop that runs the daemon.
 func (app *MetricsExporterApp) Run(ctx context.Context) error {
 	app.lggr.Println("starting application...")
-	ctx, cancelChild := context.WithCancel(ctx)
-	defer cancelChild()
 
-	errChannel := make(chan error)
+	ctx, cancel := context.WithCancel(ctx)
+	app.cancelMainLoop = cancel
+	defer cancel()
+
+	g, ctx := errgroup.WithContext(ctx)
 
 	app.lggr.Printf("Starting incomming metrics server at: %s\n", app.config.IncommingMetricsHandlerGrpcAddress)
-	go func() {
-		if err := metrics_server.RunGrpcServer(ctx, app.config.IncommingMetricsHandlerGrpcAddress, app.lggr); err != nil {
-			errChannel <- err
-		}
-	}()
+	metricsGrpcServer := metrics_server.NewMetricsGrpcServer(app.lggr)
+
+	g.Go(func() error {
+		return metricsGrpcServer.RunGrpcServer(ctx, app.config.IncommingMetricsHandlerGrpcAddress)
+	})
 
 	app.lggr.Printf("Starting prometheus metrics endpoint at: %s\n", app.config.PrometheusMetricsEndpointAddress)
-	go func() {
-		http.Handle("/metrics", promhttp.Handler())
-		if err := http.ListenAndServe(app.config.PrometheusMetricsEndpointAddress, nil); err != nil {
-			errChannel <- err
+	g.Go(func() error {
+		mux := http.NewServeMux()
+		mux.Handle("/metrics", promhttp.HandlerFor(
+			metricsGrpcServer.PrometheusRegistry,
+			promhttp.HandlerOpts{
+				EnableOpenMetrics: true,
+			},
+		))
+
+		httpServer := &http.Server{Addr: app.config.PrometheusMetricsEndpointAddress, Handler: mux}
+
+		go func() {
+			select {
+			case <-ctx.Done():
+				app.lggr.Println("Shutting down metrics endpoint...")
+				if err := httpServer.Close(); err != nil {
+					app.lggr.Fatal(err)
+				}
+			}
+		}()
+
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			app.lggr.Println("Error while running metrics endpoint server")
+			app.lggr.Fatal(err)
+			return err
 		}
-	}()
+
+		return nil
+	})
 
 	app.lggr.Println("application started!")
-	for {
-		select {
-		case err := <-errChannel:
-			app.lggr.Fatalf("Error in child applications...")
-			app.lggr.Fatal(err)
-			cancelChild()
-			return err
-		case <-ctx.Done():
-			app.lggr.Println("Exiting application...")
-			return nil
-		}
+
+	return g.Wait()
+}
+
+// Terminates main loop by ending it context
+func (app *MetricsExporterApp) Terminate() error {
+	app.lggr.Println("Terminating application loop...")
+	if app.cancelMainLoop == nil {
+		return fmt.Errorf("No application started yet!")
 	}
-}
-
-// Reload.
-//
-// Reloads the application. To be called on system's sighup
-func (app *MetricsExporterApp) Reload() error {
-	app.lggr.Println("Reloading application...")
+	app.cancelMainLoop()
 	return nil
-}
-
-func startGrpcServer(ctx context.Context) {
-
 }

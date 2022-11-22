@@ -28,14 +28,19 @@ func main() {
 		IncommingMetricsHandlerGrpcAddress: fmt.Sprintf("%s:%d", daemonCfg.MetricsHandlerAddress, daemonCfg.MetricsHandlerPort),
 		PrometheusMetricsEndpointAddress:   fmt.Sprintf("%s:%d", daemonCfg.PrometheusMetricsAddress, daemonCfg.PrometheusMetricsPort),
 	}
+
+	// Creates metrics application
 	metricsExporterApplication := app.New(lggr, config)
 
+	shouldLoadApplication := true
+
 	// Handle signals
-	signalChan := make(chan os.Signal, 1)
+	signalChan := make(chan os.Signal)
 	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, syscall.SIGHUP)
 
 	// Common shutdown function
 	shutDown := func(message string) {
+		shouldLoadApplication = false
 		lggr.Printf(message)
 		cancel()
 		os.Exit(1)
@@ -56,11 +61,11 @@ func main() {
 					return
 				case syscall.SIGHUP:
 					lggr.Printf("Reloading...")
-					if err := metricsExporterApplication.Reload(); err != nil {
-						shutDown("Failed to reload application.")
+					if err := metricsExporterApplication.Terminate(); err != nil {
+						lggr.Fatal(err)
 						return
 					}
-					lggr.Printf("Applicattion successful reloaded.")
+					lggr.Printf("cancelling application...")
 				}
 			case <-ctx.Done():
 				shutDown("Done...")
@@ -76,10 +81,15 @@ func main() {
 		cancel()
 	}()
 
-	if err := metricsExporterApplication.Run(ctx); err != nil {
-		shutDown("Error while running metrics exporter application")
-		return
+	lggr.Printf("PID: %d", os.Getpid())
+
+	for shouldLoadApplication {
+		if err := metricsExporterApplication.Run(ctx); err != nil {
+			shutDown("Error while running metrics exporter application")
+			return
+		}
 	}
+
 }
 
 type daemonConfig struct {
