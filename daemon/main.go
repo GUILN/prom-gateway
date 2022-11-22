@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -11,6 +13,8 @@ import (
 )
 
 func main() {
+	// Get daemon configuration
+	daemonCfg, nil := getDaemonConfig()
 
 	// Config contexts
 	ctx := context.Background()
@@ -19,8 +23,8 @@ func main() {
 	// Config metrics exporter application
 	lggr := log.New(os.Stdout, "[METRICS EXPORTER]: ", 0)
 	config := &app.MetricsExporterAppConfig{
-		IncommingMetricsHandlerGrpcAddress: "0.0.0.0:50051",
-		PrometheusMetricsEndpointAddress:   "0.0.0.0:8080",
+		IncommingMetricsHandlerGrpcAddress: fmt.Sprintf("%s:%d", daemonCfg.MetricsHandlerAddress, daemonCfg.MetricsHandlerPort),
+		PrometheusMetricsEndpointAddress:   fmt.Sprintf("%s:%d", daemonCfg.PrometheusMetricsAddress, daemonCfg.PrometheusMetricsPort),
 	}
 	metricsExporterApplication := app.New(lggr, config)
 
@@ -74,4 +78,29 @@ func main() {
 		shutDown("Error while running metrics exporter application")
 		return
 	}
+}
+
+type daemonConfig struct {
+	MetricsHandlerPort       int
+	MetricsHandlerAddress    string
+	PrometheusMetricsPort    int
+	PrometheusMetricsAddress string
+}
+
+func getDaemonConfig() (*daemonConfig, error) {
+
+	metricsHandlerAddress := flag.String("metrics-handler-address", "", "metrics handler address exposed by gRPC")
+	prometheusMetricsAddress := flag.String("prometheus-metrics-address", "", "address to be accessed by prometheus scraper")
+
+	metricsHandlerPort := flag.Int("metrics-handler-port", 0, "metrics handler port exposed by gRPC")
+	prometheusMetricsPort := flag.Int("prometheus-metrics-port", 0, "port to be accessed by prometheus scraper")
+
+	flag.Parse()
+
+	return &daemonConfig{
+		MetricsHandlerPort:       *metricsHandlerPort,
+		MetricsHandlerAddress:    *metricsHandlerAddress,
+		PrometheusMetricsPort:    *prometheusMetricsPort,
+		PrometheusMetricsAddress: *prometheusMetricsAddress,
+	}, nil
 }
