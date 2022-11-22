@@ -1,0 +1,6 @@
+{
+    "metrics_handler_port": 50051,
+    "metrics_handler_address": "0.0.0.0",
+    "prometheus_metrics_port": 8080,
+    "prometheus_metrics_address": "0.0.0.0"
+}

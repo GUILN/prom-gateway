@@ -12,3 +12,9 @@ run_daemon_process:
 
 run_test_client:
 	go run ./metrics_client/main.go --address 0.0.0.0:50051
+
+## Building
+build:
+	@echo "Building daemon binary..."
+	go build -o bin/promgateway daemon/main.go
+	@echo "Finished building daemon binary"
