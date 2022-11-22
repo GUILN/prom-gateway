@@ -27,3 +27,19 @@ build_installer:
 
 install_daemon: build build_installer 
 	bin/installer --binary-file bin/promgateway --config-file bin/promgateway.conf.json
+
+run_from_build: build
+	bin/promgateway --config-file bin/promgateway.conf.json
+
+## Common tasks
+doc:
+    godoc --http :8080
+
+test:
+    go test
+
+new_version:
+    ./scripts/update_version.sh
+
+config_git_hooks:
+    git config core.hooksPath .githooks
