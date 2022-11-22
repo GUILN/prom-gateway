@@ -17,4 +17,13 @@ run_test_client:
 build:
 	@echo "Building daemon binary..."
 	go build -o bin/promgateway daemon/main.go
+	cp ./promgateway.conf.json bin
 	@echo "Finished building daemon binary"
+
+build_installer:
+	@echo "Building installer..."
+	go build -o bin/installer daemon_installer/main.go
+	@echo "Finished building installer"
+
+install_daemon: build build_installer 
+	bin/installer --binary-file bin/promgateway --config-file bin/promgateway.conf.json
