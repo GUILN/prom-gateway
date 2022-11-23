@@ -1,3 +1,12 @@
+BIN_PATH=bin
+
+LINUX_PATH=$(BIN_PATH)/linux
+DARWIN_PATH=$(BIN_PATH)/darwin
+
+GRPC_PROTO_PATH=proto
+
+USER_README_FILE=README.user.md
+RELEASE_BUNDLE_NAME=promgateway-bundle.tar.gz
 
 gen_grpc_interface:
 	protoc --go_out=. --go_opt=paths=source_relative \
@@ -22,15 +31,25 @@ build:
 
 build_darwin:
 	@echo "Building daemon binary..."
-	GOOS=darwin GOARCH=amd64 go build -o bin/darwin/promgateway daemon/main.go
-	cp ./promgateway.conf.json bin/darwin/
+	GOOS=darwin GOARCH=amd64 go build -o $(DARWIN_PATH)/promgateway daemon/main.go
 	@echo "Finished building daemon binary"
 
 build_linux:
 	@echo "Building daemon binary..."
-	GOOS=linux GOARCH=arm go build -o bin/linux/promgateway daemon/main.go
-	cp ./promgateway.conf.json bin/linux/
+	GOOS=linux GOARCH=arm go build -o $(LINUX_PATH)/promgateway daemon/main.go
 	@echo "Finished building daemon binary"
+
+delete_old_release:
+	@echo "Deleting old releaes..."
+	rm -rf $(BIN_PATH)
+	rm -rf $(RELEASE_BUNDLE_NAME)
+
+generate_release_bundle: delete_old_release build_darwin build_linux
+	@echo "Generating release bundle..."
+	@echo "Copying template config file to bin folder..."
+	cp ./promgateway.conf.json $(BIN_PATH)/promgateway.conf.json.template
+	@echo "zipping..."
+	tar -czvf $(RELEASE_BUNDLE_NAME) $(BIN_PATH)/. $(GRPC_PROTO_PATH)/. $(USER_README_FILE)
 
 build_installer:
 	@echo "Building installer..."

@@ -20,12 +20,9 @@ jobs:
 
       - name: build artifacts
         run: |
-          echo "Building linux binary..."
-          make build_linux 
-          echo "Building linux binary finished"       
-          echo "Building darwin binary..."
-          make build_darwin 
-          echo "Building darwin binary finished"
+          echo "Building release bundle..."
+          make generate_release_bundle 
+          echo "Building release bundle finished"       
       - name: version
         run: |
           git fetch --tags -f
@@ -41,30 +38,12 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - name: upload linux artifacts
+      - name: upload bundle artifacts
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url}}
-          asset_path: ./bin/linux/promgateway
-          asset_name: promgateway.linux
+          asset_path: ./promgateway-bundle.tar.gz
+          asset_name: promgateway-bundle.tar.gz
           asset_content_type: application/zip
-      - name: upload darwin artifacts
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url}}
-          asset_path: ./bin/darwin/promgateway
-          asset_name: promgateway.darwin
-          asset_content_type: application/zip
-      - name: upload config file
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url}}
-          asset_path: ./bin/linux/promgateway.conf.json
-          asset_name: promgateway.conf.json
-          asset_content_type: application/json
