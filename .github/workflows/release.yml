@@ -29,7 +29,7 @@ jobs:
       - name: version
         run: |
           git fetch --all --tags
-          echo "::set-output name=version::$(git describe --tas --abbrev=0)"
+          echo "::set-output name=version::$(git describe --tags --abbrev=0)"
         id: version
       - name: create_release
         uses: actions/create-release@v1
