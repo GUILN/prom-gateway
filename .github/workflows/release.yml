@@ -1,0 +1,68 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Setup GO
+        uses: actions/setup-go@v2
+        with:
+          stable: true
+          go-version: 1.19.2
+
+      - name: build artifacts
+        run: |
+          echo "Building linux binary..."
+          make build_linux 
+          echo "Building linux binary finished"       
+          echo "Building darwin binary..."
+          make build_darwin 
+          echo "Building darwin binary finished"
+      - name: version
+        run: |
+          git fetch --all --tags
+          echo "::set-output name=version::$(describe --tas --abbrev=0)"
+        id: version
+      - name: create_release
+        uses: actions/create-release@v1
+        id: create_release
+        with:
+          draft: false
+          prerelease: false
+          release_name: ${{ steps.version.outputs.version }}
+          tag_name: ${{ github.ref }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: upload linux artifacts
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url}}
+          asset_path: ./bin/linux/promgateway
+          asset_name: promgateway.linux
+      - name: upload darwin artifacts
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url}}
+          asset_path: ./bin/darwin/promgateway
+          asset_name: promgateway.darwin
+      - name: upload config file
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url}}
+          asset_path: ./bin/linux/promgateway.conf.json
+          asset_name: promgateway.conf.json
+          asset_content_type: application/json
