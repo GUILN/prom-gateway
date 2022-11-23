@@ -28,7 +28,7 @@ jobs:
           echo "Building darwin binary finished"
       - name: version
         run: |
-          git fetch --all --tags
+          git fetch --tags -f
           echo "::set-output name=version::$(git describe --tags --abbrev=0)"
         id: version
       - name: create_release
