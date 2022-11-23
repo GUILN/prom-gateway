@@ -1,8 +1,14 @@
 BIN_PATH=bin
 
+# destination
 LINUX_PATH=$(BIN_PATH)/linux
 DARWIN_PATH=$(BIN_PATH)/darwin
 
+# source
+TEST_ASSETS_PATH=test_assets
+TEST_CLIENT=$(TEST_ASSETS_PATH)/metrics_client/main.go
+
+# others
 GRPC_PROTO_PATH=proto
 
 USER_README_FILE=README.user.md
@@ -20,7 +26,7 @@ run_daemon_process:
 		--prometheus-metrics-port 8080 \
 
 run_test_client:
-	go run ./metrics_client/main.go --address 0.0.0.0:50051
+	go run $(TEST_CLIENT) --address 0.0.0.0:50051
 
 ## Building
 build:
@@ -32,12 +38,16 @@ build:
 build_darwin:
 	@echo "Building daemon binary..."
 	GOOS=darwin GOARCH=amd64 go build -o $(DARWIN_PATH)/promgateway daemon/main.go
-	@echo "Finished building daemon binary"
+	@echo "Building test client binary..."
+	GOOS=darwin GOARCH=amd64 go build -o $(TEST_ASSETS_PATH)/bin/test_client_darwin $(TEST_CLIENT)
+	@echo "Finished binary"
 
 build_linux:
 	@echo "Building daemon binary..."
 	GOOS=linux GOARCH=arm go build -o $(LINUX_PATH)/promgateway daemon/main.go
-	@echo "Finished building daemon binary"
+	@echo "Building test client binary..."
+	GOOS=linux GOARCH=arm go build -o $(TEST_ASSETS_PATH)/bin/test_client_linux $(TEST_CLIENT)
+	@echo "Finished building binary"
 
 delete_old_release:
 	@echo "Deleting old releaes..."
@@ -49,7 +59,7 @@ generate_release_bundle: delete_old_release build_darwin build_linux
 	@echo "Copying template config file to bin folder..."
 	cp ./promgateway.conf.json $(BIN_PATH)/promgateway.conf.json.template
 	@echo "zipping..."
-	tar -czvf $(RELEASE_BUNDLE_NAME) $(BIN_PATH)/. $(GRPC_PROTO_PATH)/. $(USER_README_FILE)
+	tar -czvf $(RELEASE_BUNDLE_NAME) $(BIN_PATH)/. $(GRPC_PROTO_PATH)/. $(TEST_ASSETS_PATH)/. $(USER_README_FILE)
 
 build_installer:
 	@echo "Building installer..."

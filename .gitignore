@@ -23,6 +23,8 @@ go.work
 # Bin
 bin/
 bin/**
+**/bin/
+**/bin/**
 
 # Release
 promgateway-bundle.tar.gz

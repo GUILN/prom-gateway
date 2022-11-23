@@ -18,6 +18,9 @@ func main() {
 
 	serverAddress := flag.String("address", "", "the server address")
 	flag.Parse()
+	if *serverAddress == "" {
+		panic("Please provide a address argument, like:  --address 0.0.0.0:50051")
+	}
 	lggr.Printf("dial server %s", *serverAddress)
 
 	conn, err := grpc.Dial(*serverAddress, grpc.WithInsecure())
