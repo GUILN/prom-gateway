@@ -40,7 +40,7 @@ jobs:
           draft: false
           prerelease: false
           release_name: ${{ steps.version.outputs.version }}
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ steps.version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ github.token }}
       - name: upload linux artifacts
@@ -51,6 +51,7 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url}}
           asset_path: ./bin/linux/promgateway
           asset_name: promgateway.linux
+          asset_content_type: application/zip
       - name: upload darwin artifacts
         uses: actions/upload-release-asset@v1
         env:
@@ -59,6 +60,7 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url}}
           asset_path: ./bin/darwin/promgateway
           asset_name: promgateway.darwin
+          asset_content_type: application/zip
       - name: upload config file
         uses: actions/upload-release-asset@v1
         env:
