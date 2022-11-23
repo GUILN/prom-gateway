@@ -92,14 +92,14 @@ func main() {
 
 }
 
-type daemonConfig struct {
+type DaemonConfig struct {
 	MetricsHandlerPort       int    `json:"metrics_handler_port"`
 	MetricsHandlerAddress    string `json:"metrics_handler_address"`
 	PrometheusMetricsPort    int    `json:"prometheus_metrics_port"`
 	PrometheusMetricsAddress string `json:"prometheus_metrics_address"`
 }
 
-func getDaemonConfig() (*daemonConfig, error) {
+func getDaemonConfig() (*DaemonConfig, error) {
 
 	configFile := flag.String("config-file", "", "configuration file. Inline configuration has precedence over file configuration")
 
@@ -118,7 +118,7 @@ func getDaemonConfig() (*daemonConfig, error) {
 		}
 		return loadConfigFromFile(*configFile)
 	}
-	return &daemonConfig{
+	return &DaemonConfig{
 		MetricsHandlerPort:       *metricsHandlerPort,
 		MetricsHandlerAddress:    *metricsHandlerAddress,
 		PrometheusMetricsPort:    *prometheusMetricsPort,
@@ -126,12 +126,12 @@ func getDaemonConfig() (*daemonConfig, error) {
 	}, nil
 }
 
-func loadConfigFromFile(configFile string) (*daemonConfig, error) {
+func loadConfigFromFile(configFile string) (*DaemonConfig, error) {
 	content, err := ioutil.ReadFile(configFile)
 	if err != nil {
 		return nil, err
 	}
-	var payload daemonConfig
+	var payload DaemonConfig
 	err = json.Unmarshal(content, &payload)
 	if err != nil {
 		return nil, err

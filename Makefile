@@ -28,6 +28,10 @@ run_daemon_process:
 run_test_client:
 	go run $(TEST_CLIENT) --address 0.0.0.0:50051
 
+run_integration_test_local:
+	go clean -testcache
+	HANDLER_PORT="50051" HANDLER_ADDRESS="0.0.0.0" METRICS_PORT="8080" METRICS_ADDRESS="0.0.0.0" go test ./test
+
 ## Building
 build:
 	@echo "Building daemon binary..."
