@@ -20,6 +20,18 @@ build:
 	cp ./promgateway.conf.json bin
 	@echo "Finished building daemon binary"
 
+build_darwin:
+	@echo "Building daemon binary..."
+	GOOS=darwin GOARCH=amd64 go build -o bin/darwin/promgateway daemon/main.go
+	cp ./promgateway.conf.json bin/darwin/
+	@echo "Finished building daemon binary"
+
+build_linux:
+	@echo "Building daemon binary..."
+	GOOS=linux GOARCH=arm go build -o bin/linux/promgateway daemon/main.go
+	cp ./promgateway.conf.json bin/linux/
+	@echo "Finished building daemon binary"
+
 build_installer:
 	@echo "Building installer..."
 	go build -o bin/installer daemon_installer/main.go
@@ -40,7 +52,6 @@ test:
 
 new_version:
 	./scripts/update_version.sh
-	
 
 config_git_hooks: 
 	git config core.hooksPath .githooks
