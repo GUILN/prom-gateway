@@ -48,9 +48,9 @@ build_darwin:
 
 build_linux:
 	@echo "Building daemon binary..."
-	GOOS=linux GOARCH=arm go build -o $(LINUX_PATH)/promgateway daemon/main.go
+	GOOS=linux GOARCH=amd64 go build -o $(LINUX_PATH)/promgateway daemon/main.go
 	@echo "Building test client binary..."
-	GOOS=linux GOARCH=arm go build -o $(TEST_ASSETS_PATH)/bin/test_client_linux $(TEST_CLIENT)
+	GOOS=linux GOARCH=amd64 go build -o $(TEST_ASSETS_PATH)/bin/test_client_linux $(TEST_CLIENT)
 	@echo "Finished building binary"
 
 delete_old_release:
