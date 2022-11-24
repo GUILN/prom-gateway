@@ -6,6 +6,11 @@ specially if you are working in an environment where you have freedom to quickly
 
 This daemon captures receives metrics from services and exposes them for prometheus in a metrics `/metrics` endpoint to be scraped by prometheus `pull system` server.
 
+## !IMPORTANT: For contributors
+If you are a contributor, please follow the steps below to enable `git hooks` used by this project:
+
+- Run `make config_git_hooks` to set the `git hooks` folder to [project's git hook folder](./.githooks). 
+
 ### Testing locally
 
 Run prometheus:
