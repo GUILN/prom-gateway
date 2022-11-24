@@ -76,6 +76,19 @@ install_daemon: build build_installer
 run_from_build: build
 	bin/promgateway --config-file bin/promgateway.conf.json
 
+## Docker
+build_local_image:
+	docker build -f ./promgateway-service.dockerfile -t local-promgateway .
+
+run_local_image:
+	docker run -e HANDLER_ADDRESS='0.0.0.0' \
+				-e HANDLER_PORT='50051' \
+				-e METRICS_ADDRESS='0.0.0.0' \
+				-e METRICS_PORT='8080' \
+				-p 8080:8080 \
+				-p 50051:50051 \
+				 local-promgateway
+
 ## Common tasks
 doc:
     godoc --http :8080

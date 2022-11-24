@@ -27,4 +27,4 @@ FROM alpine:latest
 
 RUN mkdir /app
 COPY --from=builder /app/promgateway /app
-CMD ["/app/promgateway", "--metrics-handler-address", $MADDR, "--metrics-handler-port", $MPORT, "--prometheus-metrics-address", $PADDR, "--prometheus-metrics-port", $PPORT]
+CMD /app/promgateway --metrics-handler-address ${HANDLER_ADDRESS} --metrics-handler-port ${HANDLER_PORT} --prometheus-metrics-address ${METRICS_ADDRESS} --prometheus-metrics-port ${METRICS_PORT}
