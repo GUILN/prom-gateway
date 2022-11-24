@@ -1,0 +1,38 @@
+name: Release Docker Image
+
+on:
+  push:
+    tags:
+      - '*'
+env:
+  DOCKER_USER: ${{ secrets.DOCKER_USER }}
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+  DOCKER_REPO: ${{ secrets.DOCKER_REPO }}
+  DOCKER_FILE: 'promgateway-service.dockerfile'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Setup GO
+        uses: actions/setup-go@v2
+        with:
+          stable: true
+          go-version: 1.19.2
+      - name: version
+        run: |
+          git fetch --tags -f
+          echo "::set-output name=version::$(git describe --tags --abbrev=0)"
+        id: version
+      - name: docker_login
+        run: |
+          docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+      - name: build_docker_image
+        run: |
+          docker build -f $DOCKER_FILE . --tag $DOCKER_USER/$DOCKER_REPO:${{ steps.version.outputs.version }}
+      - name: push_docker_image
+        run: |
+          docker push $DOCKER_USER/$DOCKER_REPO:${{ steps.version.outputs.version }}
