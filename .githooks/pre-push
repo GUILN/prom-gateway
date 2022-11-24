@@ -11,6 +11,10 @@ CURRENT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo "running tests..."
 go test $CURRENT_DIR/..
 
+## Builds docker image (and runs integration tests in the building process).
+echo "building docker image (for integration tests)..."
+docker build -f promgateway-service.dockerfile .
+
 # Run versioning if branch is main branch Tag
 CURRENT_BRANCH=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
 if [[ $CURRENT_BRANCH == "main" && RUN_VERSIONING == 1 ]]; then

@@ -68,6 +68,7 @@ func Test_Promgateway_IncrementCounter_IncrementsAndExposes_CounterInConfiguredE
 
 	// Assert response
 	response, err := metricsClient.IncrementCounter(ctx, req)
+	fmt.Printf("%v\n", err)
 	assert.Nil(t, err)
 	assert.Equal(t, proto.IncrementCounterResponse_SUCCESS, response.Result)
 
