@@ -23,7 +23,7 @@ ENV METRICS_ADDRESS=0.0.0.0
 RUN nohup /app/promgateway --metrics-handler-address ${HANDLER_ADDRESS} --metrics-handler-port ${HANDLER_PORT} --prometheus-metrics-address ${METRICS_ADDRESS} --prometheus-metrics-port ${METRICS_PORT} & CGO_ENABLED=0 go test ./test/
 
 # Generates a tiny docker image.
-FROM alpine:latest
+FROM golang:1.19-alpine
 
 RUN mkdir /app
 COPY --from=builder /app/promgateway /app
