@@ -1,5 +1,11 @@
 # Prometheus exporter
 
+- [![Run tests](https://github.com/GUILN/prom-gateway/actions/workflows/test.yml/badge.svg)](https://github.com/GUILN/prom-gateway/actions/workflows/test.yml)
+
+- [![Release Docker Image](https://github.com/GUILN/prom-gateway/actions/workflows/release_docker_image.yml/badge.svg)](https://github.com/GUILN/prom-gateway/actions/workflows/release_docker_image.yml)
+
+- [![Release](https://github.com/GUILN/prom-gateway/actions/workflows/release.yml/badge.svg)](https://github.com/GUILN/prom-gateway/actions/workflows/release.yml)
+
 Despite of being a prometheus anti-pattern, exporting metrics somethimes is simpler to get some metrics up and running,
 specially if you are working in an environment where you have freedom to quickly implemet ephemeral systems like batching and serverless very quickly.
 
